@@ -17,6 +17,7 @@ class GameOver(BaseState):
                 self.next_state = "MENU"
                 self.done = True
             elif event.key == pygame.K_SPACE:
+                self.next_state = "GAMEPLAY"
                 self.done = True
             elif event.key == pygame.K_ESCAPE:
                 self.quit = True
