@@ -1,5 +1,6 @@
 from pathlib import Path
 import pygame
+from os.path import join
 
 class AssetLoader:
     def __init__(self):
@@ -25,3 +26,17 @@ class AssetLoader:
         for img_file in sorted(folder_path.glob("*.png")):
             frames.append(self.load_image(*folder_path.parts[len(self.base_path.parts):], img_file.name))
         return frames
+    
+
+cursor_img = None  # cache global biar load sekali saja
+
+def custom_cursor(screen):
+    global cursor_img
+    pygame.mouse.set_visible(False)
+
+    if cursor_img is None:
+        cursor_img = pygame.image.load(join('data', 'images', 'crosshair.png')).convert_alpha()
+        cursor_img.set_alpha(150)
+
+    cursor_rect = cursor_img.get_frect(center=pygame.mouse.get_pos())
+    screen.blit(cursor_img, cursor_rect)

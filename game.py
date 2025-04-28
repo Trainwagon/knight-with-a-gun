@@ -7,6 +7,7 @@ from pytmx.util_pygame import load_pygame
 from scripts.player import Player
 from scripts.settings import *
 
+
 class Game:
     def __init__(self, screen, states, start_state):
         
@@ -17,10 +18,6 @@ class Game:
         self.states = states
         self.state_name = start_state
         self.state = self.states[self.state_name]
-
-        self.player = Player(pos=(WIDTH // 2, HEIGHT // 2))
-        self.all_sprites = pygame.sprite.Group()
-        self.all_sprites.add(self.player)
 
     def event_loop(self):
          for event in pygame.event.get():
