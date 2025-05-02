@@ -1,54 +1,95 @@
-from scripts.AssetLoader import AssetLoader
 import pygame
-
-asset_loader = AssetLoader()
+from math import atan2, degrees
+from scripts.AssetLoader import AssetLoader
+from scripts.dodge_roll import DodgeRoll
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_sprites):
+    def __init__(self, pos, groups, collision_sprites, water_sprites, camera):
         super().__init__(groups)
-        # load frames
+
+        # load animation frames for player
+        asset_loader = AssetLoader()
         self.idle_side_frames = asset_loader.load_animation("data", "images", "entities", "player", "idle_side")
         self.run_side_frames = asset_loader.load_animation("data", "images", "entities", "player", "run_side")
-        self.idle_up_frames = asset_loader.load_animation("data", "images", "entities", "player", "idle_side")
+        self.idle_up_frames = asset_loader.load_animation("data", "images", "entities", "player", "idle_side")  # placeholder for now
         self.run_up_frames = asset_loader.load_animation("data", "images", "entities", "player", "run_up")
         
+        self.camera = camera
 
-        # flipped ver
-        self.flipped_run_side_frames = [pygame.transform.flip(frame, True, False) for frame in self.run_side_frames]
-        self.flipped_idle_side_frames = [pygame.transform.flip(frame, True, False) for frame in self.idle_side_frames]
+        # load rifle image
+        self.rifle_image = asset_loader.load_image("data", "images", "guns", "rifle.png")
+        self.rifle = self.rifle_image.copy()
 
-        # set initial image 
+        # make flipped versions of side animations
+        self.flipped_run_side_frames = [pygame.transform.flip(f, True, False) for f in self.run_side_frames]
+        self.flipped_idle_side_frames = [pygame.transform.flip(f, True, False) for f in self.idle_side_frames]
+
+        # set starting image and rect
         self.image = self.idle_side_frames[0]
-        self.rect = self.image.get_frect(center= pos)
-        self.hitbox_rect = self.rect.inflate(-4, 0)
+        self.rect = self.image.get_frect(center=pos)
+        self.hitbox_rect = self.rect.inflate(-8, -6)
         self.previous_frames = self.idle_side_frames
+        self.rifle_offset = pygame.Vector2(30, 0)
+        self.shoot_direction = pygame.Vector2(1, 0)
 
-        # animation state
+        # track where rifle tip is in world space
+        self.rifle_tip_world_position = self.rect.center
+
+        # animation stuff
         self.current_frame = 0
         self.animation_speed = 0.2
         self.time_accumulator = 0
         self.facing_left = False
 
-        # movement
+        # movement settings
         self.direction = pygame.Vector2()
         self.speed = 100
+        self.normal_speed = 100
         self.collision_sprites = collision_sprites
+        self.water_sprites = water_sprites
+        self.water_speed = 50
+
+        # gun shoot cooldown
+        self.can_shoot = False
+        self.shoot_time = 0
+        self.gun_cooldown = 150  # ms
+
+        # delay to avoid instant shooting after spawn
+        self.entry_delay = 500
+        self.entry_timer = pygame.time.get_ticks()
+
+        # setup dodge roll
+        self.dodge_roll = DodgeRoll(self)
 
     def input(self):
         keys = pygame.key.get_pressed()
+
+        # if rolling, skip movement
+        if self.dodge_roll.is_rolling:
+            self.dodge_roll.handle_input(keys)
+            return
+
+        # get direction from wasd
         self.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
         self.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
         if self.direction.length_squared() > 0:
             self.direction = self.direction.normalize()
 
-        # flip img tergantung input
+        # flip sprite based on input
         if self.direction.x < 0:
             self.facing_left = True
         elif self.direction.x > 0:
             self.facing_left = False
-        # self.direction = self.direction.normalize()if self.direction else self.direction
+
+        # check for dodge roll
+        self.dodge_roll.handle_input(keys)
 
     def move(self, dt):
+        # slow down if in water
+        in_water = any(sprite.rect.colliderect(self.hitbox_rect) for sprite in self.water_sprites)
+        self.speed = self.water_speed if in_water else self.normal_speed
+
+        # apply movement and check for collisions
         self.hitbox_rect.x += self.direction.x * self.speed * dt
         self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
@@ -65,30 +106,121 @@ class Player(pygame.sprite.Sprite):
                     if self.direction.y < 0: self.hitbox_rect.top = sprite.rect.bottom
                     if self.direction.y > 0: self.hitbox_rect.bottom = sprite.rect.top
 
+    def update_rifle(self, camera):
+        # get mouse pos in screen space
+        mouse_pos = pygame.mouse.get_pos()
+
+        # get player center in screen space
+        player_screen_pos = camera.apply(self.rect).center
+
+        # find direction to mouse
+        direction = pygame.Vector2(mouse_pos) - pygame.Vector2(player_screen_pos)
+
+        if direction.length_squared() > 0:
+            self.shoot_direction = direction.normalize()
+
+            # get tip of rifle in world space
+            rifle_tip_screen = player_screen_pos + self.shoot_direction * 15
+            self.rifle_tip_world_position = (
+                self.rect.centerx + (rifle_tip_screen[0] - player_screen_pos[0]),
+                self.rect.centery + (rifle_tip_screen[1] - player_screen_pos[1])
+            )
+
+    def gun_timer(self):
+        if not self.can_shoot:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.shoot_time >= self.gun_cooldown:
+                self.can_shoot = True
+
+    def get_event(self):
+        current_time = pygame.time.get_ticks()
+
+        # wait before player can shoot
+        if current_time - self.entry_timer < self.entry_delay:
+            return
+
+        # left mouse click to shoot
+        if pygame.mouse.get_pressed()[0] and self.can_shoot:
+            bullet = Bullet(self.rifle_tip_world_position, self.shoot_direction, self.groups()[0])
+            self.can_shoot = False
+            self.shoot_time = pygame.time.get_ticks()
+
+    def draw_rifle(self, surface, camera):
+        # rotate rifle image to match mouse direction
+        angle = degrees(atan2(self.shoot_direction.x, self.shoot_direction.y)) - 90
+        rotated_rifle = pygame.transform.rotate(self.rifle, angle)
+
+        # get screen pos of rifle tip
+        rifle_screen_pos = camera.apply(pygame.Rect(self.rifle_tip_world_position, (0, 0))).topleft
+
+        # draw the rifle
+        rifle_rect = rotated_rifle.get_rect(center=rifle_screen_pos)
+        surface.blit(rotated_rifle, rifle_rect)
 
     def update(self, dt):
+        self.gun_timer()
         self.input()
-        self.move(dt)
+        self.dodge_roll.update(dt)
 
-         # Choose animation frames
+        if not self.dodge_roll.is_rolling:
+            self.move(dt)
+
+        self.update_rifle(self.camera)
+        self.get_event()
+
+        # choose animation frame
         is_moving = self.direction.length_squared() != 0
         if is_moving:
             current_frames = self.flipped_run_side_frames if self.facing_left else self.run_side_frames
         else:
             current_frames = self.flipped_idle_side_frames if self.facing_left else self.idle_side_frames
 
-        # reset index
-        if current_frames is not self.previous_frames:
-            self.current_frame = 0
-            self.previous_frames = current_frames
+        # reset frame index when switching animation
+        if not self.dodge_roll.is_rolling:
+            if current_frames is not self.previous_frames:
+                self.current_frame = 0
+                self.previous_frames = current_frames
 
-        # Immediately update the image to match direction
+        # set current frame
         self.image = current_frames[self.current_frame]
 
+        # update frame timing
         self.time_accumulator += dt
         if self.time_accumulator >= self.animation_speed:
             self.time_accumulator = 0
             self.current_frame = (self.current_frame + 1) % len(current_frames)
 
+    def draw(self, surface, camera):
+        # draw roll trail if rolling
+        self.dodge_roll.draw_roll_effect(surface, camera)
+        draw_rect = self.rect.copy()
 
-            
+        # add bounce effect while rolling
+        if self.dodge_roll.roll_height_modifier != 0:
+            draw_rect.y += self.dodge_roll.roll_height_modifier
+
+        # draw player sprite
+        surface.blit(self.image, camera.apply(self.rect))
+        self.draw_rifle(surface, camera)
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, pos, direction, groups):
+        super().__init__(groups)
+        self.image = pygame.Surface((6, 3))
+        self.image.fill("yellow")
+        self.rect = self.image.get_frect(center=pos)
+        self.spawn_time = pygame.time.get_ticks()
+        self.lifetime = 1000
+        self.speed = 400
+        self.velocity = direction * self.speed
+
+    def update(self, dt):
+        # move the bullet
+        movement = self.velocity * dt
+        self.rect.centerx += movement.x
+        self.rect.centery += movement.y
+        # remove bullet after sometimes
+        if pygame.time.get_ticks() - self.spawn_time >= self.lifetime:
+            self.kill()
+

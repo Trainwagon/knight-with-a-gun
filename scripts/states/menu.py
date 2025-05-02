@@ -36,6 +36,7 @@ class Menu(BaseState):
             self.quit = True
 
     def get_event(self, event):
+            pygame.mouse.set_visible(True)
             if event.type == pygame.QUIT:
                 pygame.quit()
             elif event.type == pygame.MOUSEMOTION:

@@ -10,7 +10,6 @@ from scripts.settings import *
 
 class Game:
     def __init__(self, screen, states, start_state):
-        
         # setup
         self.clock = pygame.time.Clock()
         self.done = False
@@ -18,6 +17,13 @@ class Game:
         self.states = states
         self.state_name = start_state
         self.state = self.states[self.state_name]
+
+        # setup fps
+        font_path = os.path.join('data', 'homespun.ttf')
+        self.font = pygame.font.Font(font_path, 16)
+        fps = self.clock.get_fps()
+        fps_text = self.font.render(f"FPS: {fps:.1f}", False, (255, 255, 255))  # Putih
+        self.screen.blit(fps_text, (10, 10))  # posisi di pojok kiri atas
 
     def event_loop(self):
          for event in pygame.event.get():
@@ -44,6 +50,11 @@ class Game:
 
     def draw(self):
         self.state.draw(self.screen)
+
+        # FPS Counter
+        fps = self.clock.get_fps()
+        fps_text = self.font.render(f"FPS: {math.floor(fps)}", True, (255, 255, 255))
+        self.screen.blit(fps_text, (10, 10))
 
     def run(self):
         while not self.done:
