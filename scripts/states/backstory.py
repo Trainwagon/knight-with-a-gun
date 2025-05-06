@@ -43,7 +43,7 @@ class Backstory(BaseState):
         self.line_positions = []
         
         for i, line in enumerate(self.lines):
-            rendered = self.font.render(line, True, (255, 255, 255))
+            rendered = self.font.render(line, False, (255, 255, 255))
             self.rendered_lines.append(rendered)
             pos_y = self.screen_rect.height // 3 + i * 30
             self.line_positions.append((self.screen_rect.centerx - rendered.get_width() // 2, pos_y))

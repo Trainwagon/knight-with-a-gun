@@ -80,6 +80,9 @@ class Player(pygame.sprite.Sprite):
             return False
             
         self.health -= damage
+
+        # Screenshake
+        self.camera.start_screen_shake(duration=10, intensity=5)
         self.invincible = True
         self.invincibility_timer = pygame.time.get_ticks()
         
@@ -170,6 +173,7 @@ class Player(pygame.sprite.Sprite):
         # left mouse click to shoot
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
             bullet = Bullet(self.rifle_tip_world_position, self.shoot_direction, [self.groups()[0], self.bullets])
+            self.camera.start_screen_shake(duration=5, intensity=2)
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()
 

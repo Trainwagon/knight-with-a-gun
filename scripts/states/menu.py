@@ -6,8 +6,8 @@ class Menu(BaseState):
         super().__init__()
         self.background = pygame.image.load(self.background_path).convert_alpha()
         self.active_index = 0
-        self.options = ['Start Game', "Quit Game"]
-        self.next_state = "GAMEPLAY"
+        self.options = ["Start Game", "How To Play", "Quit Game"]
+        
 
     def render_text(self, index):
         if index == self.active_index:
@@ -16,7 +16,7 @@ class Menu(BaseState):
         else:
             color = (255, 255, 255)
             alpha = 120
-         # Render text ke Surface
+        # Render text ke Surface
         text_surf = self.font.render(self.options[index], True, color).convert_alpha()
         text_surf.set_alpha(alpha)
         return text_surf
@@ -32,8 +32,13 @@ class Menu(BaseState):
     def handle_action(self):
         if self.active_index == 0:
             self.done = True
+            self.next_state = "GAMEPLAY"
         elif self.active_index == 1:
+            self.next_state = "TUTORIAL"
+            self.done = True
+        elif self.active_index == 2:
             self.quit = True
+            
 
     def get_event(self, event):
         pygame.mouse.set_visible(True)
@@ -66,7 +71,7 @@ class Menu(BaseState):
             text_rect = self.get_text_pos(text_render, index)
             surface.blit(text_render, text_rect)
 
-            # Tambah cursor panah di option yang aktif
+            # add > on the left side of the options in menu
             if index == self.active_index:
                 cursor = self.font.render(">", True, (255, 255, 255))
                 cursor_rect = cursor.get_rect()
