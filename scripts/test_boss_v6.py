@@ -35,7 +35,7 @@ class Boss(pygame.sprite.Sprite):
         self.hitbox = self.rect.inflate(-20, -20)  # Smaller hitbox for more forgiving collisions
         
         # Boss stats
-        self.max_health = 1000
+        self.max_health = 100
         self.health = self.max_health
         self.speed = 100  # Increased from 1.5 to 60 units per second
         self.attack_cooldown = 1000  # milliseconds - reduced cooldown

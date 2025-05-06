@@ -7,8 +7,7 @@ from scripts.tilemap import TileMap
 from os.path import join
 from scripts.AssetLoader import custom_cursor
 from scripts.camera import Camera
-# from scripts.boss import Boss  # Import the Boss class
-from scripts.test_boss_v6 import Boss  # Import the Boss class
+from scripts.test_boss_v6 import Boss  
 
 class Gameplay(BaseState):
     def __init__(self):
@@ -20,7 +19,7 @@ class Gameplay(BaseState):
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
         self.water_sprites = pygame.sprite.Group()
-        self.bullets = pygame.sprite.Group()  # Group for player bullets
+        self.bullets = pygame.sprite.Group() 
         
         # Game state
         self.paused = False
@@ -30,11 +29,14 @@ class Gameplay(BaseState):
         # Font for UI elements
         self.font_path = join('data', 'homespun.ttf')
         self.ui_font = None  # Will be initialized in startup
+
+        # Transition effect variables
+        self.transitioning = False
+        self.transition_alpha = 0
+        self.transition_speed = 5  # How fast the transition occurs
         
     def startup(self, persistent):
         self.persist = persistent
-        # self.next_state = "GAME_OVER"
-        self.if_restart = "GAMEPLAY"
         
         # Initialize UI font
         self.ui_font = pygame.font.Font(self.font_path, 20)
@@ -49,6 +51,10 @@ class Gameplay(BaseState):
         self.paused = False
         self.boss_defeated = False
         self.game_over = False
+        
+        # Reset transition
+        self.transitioning = False
+        self.transition_alpha = 0
         
         # load map
         self.tilemap = TileMap(filename=join('data', 'maps', '0.tmx'),
@@ -108,6 +114,7 @@ class Gameplay(BaseState):
                     bullet.kill()
                     if boss_defeated:
                         self.boss_defeated = True
+                        self.start_transition()
                         
         # Check for boss bullets hitting player
         if hasattr(self.boss, 'bullets') and hasattr(self, 'player'):
@@ -117,12 +124,29 @@ class Gameplay(BaseState):
                     bullet.kill()
                     if player_dead:
                         self.game_over = True
+                        self.start_transition()
+
+    def start_transition(self):
+        self.transitioning = True
+        self.transition_alpha = 0
+    
+    def update_transition(self, dt):
+        if self.transitioning:
+            self.transition_alpha += self.transition_speed
+            if self.transition_alpha >= 255:
+                self.transition_alpha = 255
+                self.done = True  # Move to next state when fully faded
 
     def update(self, dt):
         # Don't update game if paused
         if self.paused:
             return
-            
+        
+        # Update transition if active
+        if self.transitioning:
+            self.update_transition(dt)
+            return
+        
         # Update all sprites
         self.all_sprites.update(dt)
         self.boss.update(dt)
@@ -140,15 +164,15 @@ class Gameplay(BaseState):
         # Check game over conditions
         if hasattr(self.player, 'health') and self.player.health <= 0:
             self.persist['victory'] = False
-            self.done = True  # Game over if player dies
+            if not self.transitioning:
+                self.start_transition()
             
         # Check victory condition
         if self.boss_defeated:
             self.persist['victory'] = True
             self.next_state = "GAME_OVER"
-            # Wait a moment for victory effects
-            pygame.time.delay(1500)
-            self.done = True
+            if not self.transitioning:
+                self.start_transition()
 
     def draw(self, surface):
         surface.fill((0, 0, 0))
@@ -166,8 +190,6 @@ class Gameplay(BaseState):
             else:
                 surface.blit(self.player.image, self.camera.apply(self.player.rect))
         
-        
-
         # Draw boss with special effects
         if hasattr(self, 'boss') and self.boss in self.all_sprites:
             # Check if boss has its own draw method
@@ -187,8 +209,17 @@ class Gameplay(BaseState):
         if self.paused:
             self.draw_pause_menu(surface)
         
+        # Draw transition effect if active
+        if self.transitioning:
+            self.draw_transition(surface)
+
         # Draw custom cursor
         custom_cursor(surface)
+
+    def draw_transition(self, surface):
+        transition_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        transition_surface.fill((0, 0, 0, self.transition_alpha))
+        surface.blit(transition_surface, (0, 0))
 
     def draw_health_ui(self, surface):
         # Draw health bar
