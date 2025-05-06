@@ -5,6 +5,7 @@ from scripts.states.menu import Menu
 from scripts.states.gameplay import Gameplay
 from scripts.states.game_over import GameOver
 from scripts.states.splash import Splash
+from scripts.states.backstory import Backstory
 
 from game import Game
 
@@ -15,6 +16,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN|pygame.SCA
 states = {
     'MENU': Menu(),
     'SPLASH': Splash(),
+    'BACKSTORY': Backstory(),
     'GAMEPLAY': Gameplay(),
     'GAME_OVER': GameOver(),
 }
@@ -23,6 +25,4 @@ game = Game(screen, states, "SPLASH")
 game.run()
 
 pygame.quit()
-sys.exit()
-
-  
+sys.exit() 

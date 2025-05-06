@@ -36,19 +36,27 @@ class Menu(BaseState):
             self.quit = True
 
     def get_event(self, event):
-            pygame.mouse.set_visible(True)
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.MOUSEMOTION:
-                mouse_pos = event.pos
-                for index, option in enumerate(self.options):
-                    text_render = self.render_text(index)
-                    text_rect = self.get_text_pos(text_render, index)
-                    if text_rect.collidepoint(mouse_pos):
-                        self.active_index = index
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    self.handle_action()
+        pygame.mouse.set_visible(True)
+        if event.type == pygame.QUIT:
+            pygame.quit()
+        elif event.type == pygame.KEYDOWN:
+            # Handle keyboard navigation
+            if event.key in (pygame.K_w, pygame.K_UP):
+                self.active_index = (self.active_index - 1) % len(self.options)
+            elif event.key in (pygame.K_s, pygame.K_DOWN):
+                self.active_index = (self.active_index + 1) % len(self.options)
+            elif event.key == pygame.K_RETURN:
+                self.handle_action()
+        elif event.type == pygame.MOUSEMOTION:
+            mouse_pos = event.pos
+            for index, option in enumerate(self.options):
+                text_render = self.render_text(index)
+                text_rect = self.get_text_pos(text_render, index)
+                if text_rect.collidepoint(mouse_pos):
+                    self.active_index = index
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                self.handle_action()
 
     def draw(self, surface):
         surface.fill((0,0,0))
@@ -64,4 +72,3 @@ class Menu(BaseState):
                 cursor_rect = cursor.get_rect()
                 cursor_rect.midright = (text_rect.left - 10, text_rect.centery)
                 surface.blit(cursor, cursor_rect)
-                

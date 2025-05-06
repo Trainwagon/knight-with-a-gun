@@ -50,7 +50,7 @@ class Player(pygame.sprite.Sprite):
         self.water_speed = 50
 
         # gun shoot cooldown
-        self.can_shoot = False
+        self.can_shoot = True  # Changed from False to True to allow shooting after init
         self.shoot_time = 0
         self.gun_cooldown = 150  # ms
 
@@ -60,6 +60,34 @@ class Player(pygame.sprite.Sprite):
 
         # setup dodge roll
         self.dodge_roll = DodgeRoll(self)
+        
+        # Player health and damage effects
+        self.max_health = 100
+        self.health = self.max_health
+        self.invincible = False
+        self.invincibility_duration = 1000  # ms
+        self.invincibility_timer = 0
+        self.flash_duration = 0.1
+        self.flash_timer = 0
+        self.flashing = False
+        
+        # Create a group for player bullets
+        self.bullets = pygame.sprite.Group()
+
+    def take_damage(self, damage):
+        # Don't take damage during dodge roll
+        if self.dodge_roll.is_rolling or self.invincible:
+            return False
+            
+        self.health -= damage
+        self.invincible = True
+        self.invincibility_timer = pygame.time.get_ticks()
+        
+        # Visual feedback
+        self.flashing = True
+        self.flash_timer = 0
+        
+        return self.health <= 0  # Return True if player is dead
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -141,7 +169,7 @@ class Player(pygame.sprite.Sprite):
 
         # left mouse click to shoot
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
-            bullet = Bullet(self.rifle_tip_world_position, self.shoot_direction, self.groups()[0])
+            bullet = Bullet(self.rifle_tip_world_position, self.shoot_direction, [self.groups()[0], self.bullets])
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()
 
@@ -168,52 +196,77 @@ class Player(pygame.sprite.Sprite):
         self.update_rifle(self.camera)
         self.get_event()
 
-        # choose animation frame
+        # Choose animation frame
         is_moving = self.direction.length_squared() != 0
         if is_moving:
             current_frames = self.flipped_run_side_frames if self.facing_left else self.run_side_frames
         else:
             current_frames = self.flipped_idle_side_frames if self.facing_left else self.idle_side_frames
 
-        # reset frame index when switching animation
+        # Reset frame index when switching animation
         if not self.dodge_roll.is_rolling:
             if current_frames is not self.previous_frames:
                 self.current_frame = 0
                 self.previous_frames = current_frames
 
-        # set current frame
+        # Set current frame
         self.image = current_frames[self.current_frame]
 
-        # update frame timing
+        # Update frame timing
         self.time_accumulator += dt
         if self.time_accumulator >= self.animation_speed:
             self.time_accumulator = 0
             self.current_frame = (self.current_frame + 1) % len(current_frames)
+            
+        # Update bullets
+        self.bullets.update(dt)
+        
+        # Update invincibility
+        if self.invincible:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.invincibility_timer >= self.invincibility_duration:
+                self.invincible = False
+                self.flashing = False
+                
+        # Update flash timer
+        if self.flashing:
+            self.flash_timer += dt
+            if self.flash_timer >= self.flash_duration:
+                self.flash_timer = 0  # Reset timer but keep flashing while invincible
 
     def draw(self, surface, camera):
-        # draw roll trail if rolling
+        # Draw roll trail if rolling
         self.dodge_roll.draw_roll_effect(surface, camera)
         draw_rect = self.rect.copy()
 
-        # add bounce effect while rolling
+        # Add bounce effect while rolling
         if self.dodge_roll.roll_height_modifier != 0:
             draw_rect.y += self.dodge_roll.roll_height_modifier
 
-        # draw player sprite
-        surface.blit(self.image, camera.apply(self.rect))
+        # Draw player sprite with flash effect if hit
+        if self.flashing and int(self.flash_timer * 15) % 2 == 0:
+            # Create a white version of the current frame for the flash effect
+            white_image = self.image.copy()
+            white_image.fill((255, 255, 255), special_flags=pygame.BLEND_RGB_ADD)
+            surface.blit(white_image, camera.apply(self.rect))
+        else:
+            surface.blit(self.image, camera.apply(self.rect))
+            
+        # Draw rifle
         self.draw_rifle(surface, camera)
 
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, pos, direction, groups):
         super().__init__(groups)
-        self.image = pygame.Surface((6, 3))
+        self.image = pygame.Surface((6, 6))
         self.image.fill("yellow")
         self.rect = self.image.get_frect(center=pos)
         self.spawn_time = pygame.time.get_ticks()
-        self.lifetime = 1000
+        self.lifetime = 2000
         self.speed = 400
         self.velocity = direction * self.speed
+        self.damage = 15  # Damage value for player bullets
 
     def update(self, dt):
         # move the bullet
@@ -223,4 +276,3 @@ class Bullet(pygame.sprite.Sprite):
         # remove bullet after sometimes
         if pygame.time.get_ticks() - self.spawn_time >= self.lifetime:
             self.kill()
-

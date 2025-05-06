@@ -1,10 +1,8 @@
 import pygame
-import math, random, os, sys
+import math, os, sys
 
-from pytmx.util_pygame import load_pygame
 
 # scripts dir
-from scripts.player import Player
 from scripts.settings import *
 
 
@@ -21,14 +19,13 @@ class Game:
         # setup fps
         font_path = os.path.join('data', 'homespun.ttf')
         self.font = pygame.font.Font(font_path, 16)
-        fps = self.clock.get_fps()
-        fps_text = self.font.render(f"FPS: {fps:.1f}", False, (255, 255, 255))  # Putih
-        self.screen.blit(fps_text, (10, 10))  # posisi di pojok kiri atas
 
     def event_loop(self):
-         for event in pygame.event.get():
+        for event in pygame.event.get():
             self.state.get_event(event)
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE): # ganti ini nanti kalo udah ada menu escape jangan buat quit
+            # Remove the global ESC quit - we'll handle this in the state
+            if event.type == pygame.QUIT:
+                self.done = True
                 pygame.quit()
                 sys.exit()
 
@@ -40,21 +37,38 @@ class Game:
         persistent = self.state.persist
         self.state = self.states[self.state_name]
         self.state.startup(persistent)
+    
+    def reset_state(self):
+        # Get the current state's persist data
+        persistent = self.state.persist
+        # Mark that we want to restart the current state
+        persistent['restart'] = True
+        # Reinitialize the current state
+        self.state = self.states[self.state_name]
+        self.state.startup(persistent)
 
     def update(self, dt):
         if self.state.quit:
             self.done = True
+            pygame.quit()
+            sys.exit()
         elif self.state.done:
-            self.flip_state()
+            # Check if we need to restart the current state
+            if self.state.persist.get('restart', False):
+                self.reset_state()
+                self.state.persist['restart'] = False
+            else:
+                self.flip_state()
         self.state.update(dt)
 
     def draw(self):
         self.state.draw(self.screen)
 
-        # FPS Counter
+        # FPS Counter in top right corner
         fps = self.clock.get_fps()
-        fps_text = self.font.render(f"FPS: {math.floor(fps)}", True, (255, 255, 255))
-        self.screen.blit(fps_text, (10, 10))
+        fps_text = self.font.render(f"FPS: {math.floor(fps)}", False, (255, 255, 255))
+        fps_rect = fps_text.get_rect(topright=(WIDTH - 10, 10))
+        self.screen.blit(fps_text, fps_rect)
 
     def run(self):
         while not self.done:
@@ -68,5 +82,3 @@ class Game:
             
             # update
             pygame.display.update()
-
-

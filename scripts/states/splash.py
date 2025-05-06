@@ -12,7 +12,7 @@ class Splash(BaseState):
         self.skip_text = self.font.render("Press Space to Skip", False, (200, 200, 200))
         self.skip_rect = self.skip_text.get_rect(center=(self.screen_rect.centerx, self.screen_rect.centery + 30))
 
-        self.next_state = "MENU"
+        self.next_state = "BACKSTORY"
         self.time_active = 0
         self.dot_timer = 0
         self.dot_count = 0
