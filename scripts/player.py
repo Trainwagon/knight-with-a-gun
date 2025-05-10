@@ -2,11 +2,12 @@ import pygame
 from math import atan2, degrees
 from scripts.AssetLoader import AssetLoader
 from scripts.dodge_roll import DodgeRoll
+from os.path import join
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_sprites, water_sprites, camera):
         super().__init__(groups)
-
+        
         # load animation frames for player
         asset_loader = AssetLoader()
         self.idle_side_frames = asset_loader.load_animation("data", "images", "entities", "player", "idle_side")
@@ -15,6 +16,11 @@ class Player(pygame.sprite.Sprite):
         self.run_up_frames = asset_loader.load_animation("data", "images", "entities", "player", "run_up")
         
         self.camera = camera
+
+        self.shoot_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'shoot.wav'))
+        self.shoot_sound.set_volume(0.4)
+        self.hurt_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'hurt.wav'))
+        self.hurt_sound.set_volume(1)
 
         # load rifle image
         self.rifle_image = asset_loader.load_image("data", "images", "guns", "rifle.png")
@@ -80,6 +86,9 @@ class Player(pygame.sprite.Sprite):
             return False
             
         self.health -= damage
+        
+        # Play sound
+        self.hurt_sound.play()
 
         # Screenshake
         self.camera.start_screen_shake(duration=10, intensity=5)
@@ -174,6 +183,7 @@ class Player(pygame.sprite.Sprite):
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
             bullet = Bullet(self.rifle_tip_world_position, self.shoot_direction, [self.groups()[0], self.bullets])
             self.camera.start_screen_shake(duration=5, intensity=2)
+            self.shoot_sound.play()
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()
 

@@ -4,6 +4,7 @@ from scripts.AssetLoader import AssetLoader
 from scripts.settings import *
 import math
 import random
+from os.path import join
 
 class Boss(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_sprites, player):
@@ -23,7 +24,7 @@ class Boss(pygame.sprite.Sprite):
             'attack_eye': self.asset_loader.load_animation('data', 'images', 'entities', 'enemy', 'boss_eye_attack_w_eye'),
             'attack_hands': self.asset_loader.load_animation('data', 'images', 'entities', 'enemy', 'boss_eye_attack_w_hands'),
         }
-        
+        self.shoot_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'boss_bullet_1.wav'))
         # Animation state
         self.state = 'idle'
         self.frame_index = 0
@@ -35,7 +36,7 @@ class Boss(pygame.sprite.Sprite):
         self.hitbox = self.rect.inflate(-20, -20)  # Smaller hitbox for more forgiving collisions
         
         # Boss stats
-        self.max_health = 100
+        self.max_health = 5000
         self.health = self.max_health
         self.speed = 100  # Increased from 1.5 to 60 units per second
         self.attack_cooldown = 1000  # milliseconds - reduced cooldown
@@ -325,6 +326,8 @@ class Boss(pygame.sprite.Sprite):
                 self.shoot_bullet(pred_angle)
     
     def shoot_bullet(self, angle):
+        self.shoot_sound.set_volume(0.4)
+        self.shoot_sound.play()
         Bullet(
             self.rect.center, 
             angle, 
@@ -416,7 +419,7 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2(math.cos(angle_rad), math.sin(angle_rad))
         
         # Bullet attributes
-        self.speed = 55 * (1 + 0.5 * (phase - 1))  # Increased from 100 to 150
+        self.speed = 60 * (1 + 0.5 * (phase - 1))  # Increased from 100 to 150
         self.damage = 10 * phase  # More damage in later phases
         self.lifetime = 0
         self.max_lifetime = 10  # Seconds

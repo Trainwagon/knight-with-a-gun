@@ -36,6 +36,11 @@ class Gameplay(BaseState):
         self.transition_speed = 5  # How fast the transition occurs
         
     def startup(self, persistent):
+        # Background music
+        pygame.mixer.music.load(join('data', 'sound', 'music', 'bg_music.wav'))
+        pygame.mixer.music.set_volume(0.4)
+        pygame.mixer.music.play(-1)
+        
         self.persist = persistent
         
         # Initialize UI font
@@ -55,7 +60,7 @@ class Gameplay(BaseState):
         # Reset transition
         self.transitioning = False
         self.transition_alpha = 0
-        
+
         # load map
         self.tilemap = TileMap(filename=join('data', 'maps', '0.tmx'),
                                all_sprites=self.all_sprites,
@@ -84,6 +89,7 @@ class Gameplay(BaseState):
         # Game state variables
         self.boss_defeated = False
         self.game_over = False
+        
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
@@ -136,6 +142,7 @@ class Gameplay(BaseState):
             if self.transition_alpha >= 255:
                 self.transition_alpha = 255
                 self.done = True  # Move to next state when fully faded
+                pygame.mixer.music.pause()
 
     def update(self, dt):
         # Don't update game if paused
@@ -290,18 +297,24 @@ class Gameplay(BaseState):
     def handle_pause_input(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP or event.key == pygame.K_w:
+                self.choosing_sound.play()
                 self.selected_option = (self.selected_option - 1) % len(self.pause_options)
             elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                self.choosing_sound.play()
                 self.selected_option = (self.selected_option + 1) % len(self.pause_options)
             elif event.key == pygame.K_RETURN:
+                self.choosing_sound.play()
                 self.execute_pause_option()
         elif event.type == pygame.MOUSEMOTION:
             mouse_pos = event.pos
+            prev_selected = self.selected_option
             for index, option in enumerate(self.pause_options):
                 text_surface = self.ui_font.render(option, False, (255,255,255))
                 text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//3 + index * 30))
                 if text_rect.collidepoint(mouse_pos):
-                    self.selected_option = index
+                    if self.selected_option != index:
+                        self.selected_option = index
+                        self.choosing_sound.play()
                     break
     
     def handle_pause_mouse_click(self, event):
@@ -311,6 +324,7 @@ class Gameplay(BaseState):
                 text_surface = self.ui_font.render(option, True, (255, 255, 255))
                 text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 30))
                 if text_rect.collidepoint(mouse_pos):
+                    self.choosing_sound.play()
                     self.selected_option = index
                     self.execute_pause_option()
                     break
@@ -326,6 +340,7 @@ class Gameplay(BaseState):
             self.done = True
         elif option == "Menu":
             self.next_state = "MENU"
+            pygame.mixer.music.pause()
             self.done = True
         elif option == "Quit":
             pygame.quit()

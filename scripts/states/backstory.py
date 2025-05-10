@@ -1,12 +1,15 @@
 import pygame
 from .base import BaseState
-import os
+from os.path import join
 
 class Backstory(BaseState):
     def __init__(self):
         super().__init__()
         self.next_state = "MENU"
         self.time_active = 0
+
+        self.lines_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'monologue_sound.wav'))
+        self.lines_sound.set_volume(1)
         
         # Font setup
         try:
@@ -105,6 +108,7 @@ class Backstory(BaseState):
             
             # Draw current line in progress
             if self.current_line_index < len(self.lines):
+                self.lines_sound.play()
                 current_text = self.lines[self.current_line_index][:self.current_char_index]
                 current_render = self.font.render(current_text, True, (255, 255, 255))
                 pos_x = self.screen_rect.centerx - self.rendered_lines[self.current_line_index].get_width() // 2

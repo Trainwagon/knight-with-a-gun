@@ -2,6 +2,7 @@ import pygame
 import sys
 from .base import BaseState
 from os.path import join
+from scripts.AssetLoader import custom_cursor
 
 class GameOver(BaseState):
     def __init__(self):
@@ -9,7 +10,7 @@ class GameOver(BaseState):
         self.next_state = "GAMEPLAY"
         self.options = ["Restart", "Main Menu", "Quit"]
         self.selected_option = 0
-        
+
         # Load font
         try:
             font_path = join('data', 'homespun.ttf')
@@ -28,21 +29,28 @@ class GameOver(BaseState):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP or event.key == pygame.K_w:  # Fixed the comparison
                 self.selected_option = (self.selected_option - 1) % len(self.options)
+                self.choosing_sound.play()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_s:  # Fixed the comparison
                 self.selected_option = (self.selected_option + 1) % len(self.options)
+                self.choosing_sound.play()
             elif event.key == pygame.K_RETURN:
+                self.choosing_sound.play()
                 self.execute_option()
         
         # Handle mouse motion for menu option selection
         elif event.type == pygame.MOUSEMOTION:
             mouse_pos = event.pos
+            prev_selected = self.selected_option
             menu_y_start = self.screen_rect.height // 4 + 80  # Approximate position based on title + subtitle
-            for i, option in enumerate(self.options):
+            for index, option in enumerate(self.options):
                 # Calculate text position to check collision
                 text = self.font.render(option, True, (255, 255, 255))
-                text_rect = text.get_rect(center=(self.screen_rect.width // 2, menu_y_start + i * 30))
+                text_rect = text.get_rect(center=(self.screen_rect.width // 2, menu_y_start + index * 30))
                 if text_rect.collidepoint(mouse_pos):
-                    self.selected_option = i
+                    if self.selected_option != index:
+                        self.selected_option = index
+                        self.choosing_sound.play()
+                    
         
         # Handle mouse click for option selection
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
@@ -91,6 +99,5 @@ class GameOver(BaseState):
             text_rect = text.get_rect(center=(surface.get_width() // 2, menu_y_start + i * 30))  # Reduced spacing between options
             surface.blit(text, text_rect)
         
-        # Draw custom cursor
-        from scripts.AssetLoader import custom_cursor
+        
         custom_cursor(surface)

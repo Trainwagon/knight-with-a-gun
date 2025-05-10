@@ -1,5 +1,6 @@
 import pygame
 from math import sin
+from os.path import join
 
 class DodgeRoll:
     def __init__(self, player):
@@ -22,6 +23,13 @@ class DodgeRoll:
         # for slight vertical bounce effect
         self.roll_height_modifier = 0
         
+        # initialize mixer if not already done
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
+        
+        # load dodge sound once
+        self.dodge_sound = pygame.mixer.Sound(join("data", 'sound', 'sfx', 'dodge.wav'))
+        self.dodge_sound.set_volume(0.1) 
 
     def start_roll(self, direction):
         # can't start roll if already rolling or on cooldown
@@ -46,8 +54,8 @@ class DodgeRoll:
         
         self.player.direction = self.roll_direction.copy()
 
-        # play sound 
-        # pygame.mixer.Sound("path/to/roll_sound.wav").play()
+        # play sound
+        self.dodge_sound.play()
         
         return True
         
@@ -148,3 +156,4 @@ class DodgeRoll:
                 # no movement input, roll based on facing
                 direction = pygame.Vector2(-1 if self.player.facing_left else 1, 0)
                 self.start_roll(direction)
+

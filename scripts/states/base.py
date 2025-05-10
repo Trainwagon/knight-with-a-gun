@@ -3,6 +3,8 @@ import os
 
 class BaseState:
     def __init__(self):
+        self.choosing_sound = pygame.mixer.Sound(os.path.join('data', 'sound', 'sfx', 'choosing.wav'))
+        self.choosing_sound.set_volume(1)
         self.font_path = os.path.join('data', 'homespun.ttf')
         self.background_path = os.path.join('data', 'images', 'menu_back.png')
         self.done = False
