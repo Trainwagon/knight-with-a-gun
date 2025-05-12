@@ -17,7 +17,7 @@ class Game:
         self.state = self.states[self.state_name]
 
         # setup fps
-        font_path = os.path.join('data', 'homespun.ttf')
+        font_path = 'data/homespun.ttf'
         self.font = pygame.font.Font(font_path, 16)
 
     def event_loop(self):

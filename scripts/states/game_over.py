@@ -10,17 +10,21 @@ class GameOver(BaseState):
         self.next_state = "GAMEPLAY"
         self.options = ["Restart", "Main Menu", "Quit"]
         self.selected_option = 0
+       
 
         # Load font
         try:
-            font_path = join('data', 'homespun.ttf')
-            self.font = pygame.font.Font(font_path, 24)  # Increased font size
-            self.title_font = pygame.font.Font(font_path, 36)  # Increased title font size
+            font_path = 'data/homespun.ttf'
+            self.font = pygame.font.Font(font_path, 24)
+            self.title_font = pygame.font.Font(font_path, 36) 
         except:
             self.font = pygame.font.Font(None, 24)
             self.title_font = pygame.font.Font(None, 36)
     
     def startup(self, persistent):
+        pygame.mixer.music.load('data/sound/music/ambient.wav')
+        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.play(-1)
         self.persist = persistent
         self.selected_option = 0
         self.game_won = persistent.get('victory', False)
@@ -54,6 +58,7 @@ class GameOver(BaseState):
         
         # Handle mouse click for option selection
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
+            self.choosing_sound.play()
             self.execute_option()
     
     def execute_option(self):
@@ -62,6 +67,7 @@ class GameOver(BaseState):
             self.persist['restart'] = True
             self.next_state = "GAMEPLAY"
             self.done = True
+            pygame.mixer.music.pause()
         elif option == "Main Menu":
             self.next_state = "MENU"
             self.done = True

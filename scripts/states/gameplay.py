@@ -27,7 +27,7 @@ class Gameplay(BaseState):
         self.selected_option = 0
         
         # Font for UI elements
-        self.font_path = join('data', 'homespun.ttf')
+        self.font_path = 'data/homespun.ttf'
         self.ui_font = None  # Will be initialized in startup
 
         # Transition effect variables
@@ -37,7 +37,7 @@ class Gameplay(BaseState):
         
     def startup(self, persistent):
         # Background music
-        pygame.mixer.music.load(join('data', 'sound', 'music', 'bg_music.wav'))
+        pygame.mixer.music.load('data/sound/music/bg_music.wav')
         pygame.mixer.music.set_volume(0.4)
         pygame.mixer.music.play(-1)
         
@@ -62,7 +62,7 @@ class Gameplay(BaseState):
         self.transition_alpha = 0
 
         # load map
-        self.tilemap = TileMap(filename=join('data', 'maps', '0.tmx'),
+        self.tilemap = TileMap(filename='data/maps/0.tmx',
                                all_sprites=self.all_sprites,
                                collision_sprites=self.collision_sprites,
                                water_sprites=self.water_sprites)
@@ -277,9 +277,8 @@ class Gameplay(BaseState):
         surface.blit(overlay, (0, 0))
         
         # Create font for pause menu
-        font_path = join('data', 'homespun.ttf')
-        font = pygame.font.Font(font_path, 24)
-        title_font = pygame.font.Font(font_path, 32)
+        font = pygame.font.Font(self.font_path, 24)
+        title_font = pygame.font.Font(self.font_path, 32)
         
         # Draw pause title
         title = title_font.render("PAUSED", True, (255, 255, 255))

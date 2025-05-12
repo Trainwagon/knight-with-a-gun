@@ -17,9 +17,9 @@ class Player(pygame.sprite.Sprite):
         
         self.camera = camera
 
-        self.shoot_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'shoot.wav'))
+        self.shoot_sound = pygame.mixer.Sound('data/sound/sfx/shoot.wav')
         self.shoot_sound.set_volume(0.4)
-        self.hurt_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'hurt.wav'))
+        self.hurt_sound = pygame.mixer.Sound('data/sound/sfx/hurt.wav')
         self.hurt_sound.set_volume(1)
 
         # load rifle image

@@ -8,7 +8,7 @@ class Backstory(BaseState):
         self.next_state = "MENU"
         self.time_active = 0
 
-        self.lines_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'monologue_sound.wav'))
+        self.lines_sound = pygame.mixer.Sound('data/sound/sfx/monologue_sound.wav')
         self.lines_sound.set_volume(1)
         
         # Font setup

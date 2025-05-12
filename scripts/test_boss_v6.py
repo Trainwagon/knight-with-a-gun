@@ -24,7 +24,7 @@ class Boss(pygame.sprite.Sprite):
             'attack_eye': self.asset_loader.load_animation('data', 'images', 'entities', 'enemy', 'boss_eye_attack_w_eye'),
             'attack_hands': self.asset_loader.load_animation('data', 'images', 'entities', 'enemy', 'boss_eye_attack_w_hands'),
         }
-        self.shoot_sound = pygame.mixer.Sound(join('data', 'sound', 'sfx', 'boss_bullet_1.wav'))
+        self.shoot_sound = pygame.mixer.Sound('data/sound/sfx/boss_bullet_1.wav')
         # Animation state
         self.state = 'idle'
         self.frame_index = 0
@@ -419,7 +419,7 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2(math.cos(angle_rad), math.sin(angle_rad))
         
         # Bullet attributes
-        self.speed = 60 * (1 + 0.5 * (phase - 1))  # Increased from 100 to 150
+        self.speed = 60 * (1 + 0.5 * (phase - 1)) 
         self.damage = 10 * phase  # More damage in later phases
         self.lifetime = 0
         self.max_lifetime = 10  # Seconds

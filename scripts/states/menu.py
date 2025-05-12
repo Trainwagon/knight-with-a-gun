@@ -10,7 +10,7 @@ class Menu(BaseState):
         self.options = ["Start Game", "How To Play", "Quit Game"]
         
         # Ambient
-        pygame.mixer.music.load(join('data', 'sound', 'music', 'ambient.wav'))
+        pygame.mixer.music.load('data/sound/music/ambient.wav')
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.play(-1)
         
@@ -74,6 +74,7 @@ class Menu(BaseState):
                     break
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
+                self.choosing_sound.play()
                 self.handle_action()
 
     def draw(self, surface):

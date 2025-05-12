@@ -28,7 +28,7 @@ class DodgeRoll:
             pygame.mixer.init()
         
         # load dodge sound once
-        self.dodge_sound = pygame.mixer.Sound(join("data", 'sound', 'sfx', 'dodge.wav'))
+        self.dodge_sound = pygame.mixer.Sound("data/sound/sfx/dodge.wav")
         self.dodge_sound.set_volume(0.1) 
 
     def start_roll(self, direction):
