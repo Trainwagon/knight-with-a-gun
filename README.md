@@ -1,6 +1,6 @@
 # 🛡️ Knight With a Gun
 
-A super simple bullet hell game where you're a knight with a gun... and you're fighting one big boss.
+A super simple bullet hell game where you're a knight with a gun... and you're fighting one big boss an eye... with arms.
 
 🔗 [Play on Itch.io](https://pgrz.itch.io/knight-with-a-gun)
 
@@ -25,5 +25,4 @@ A super simple bullet hell game where you're a knight with a gun... and you're f
 3. Run `main.exe`  
 4. Fight the boss and try not to die
 
----
 ## Made By Me
