@@ -25,4 +25,15 @@ A super simple bullet hell game where you're a knight with a gun... and you're f
 3. Run `main.exe`  
 4. Fight the boss and try not to die
 
+## How to Run This Project (From Source)
+
+### Prerequisites
+- Python 3.x
+- pip (Python package manager)
+
+### Installation & Setup
+1. Clone this repository
+2. pip install -r requirements.txt
+3. python main.py
+
 ## Made By Trainwagon
