@@ -2,3 +2,9 @@ __pycache__
 .venv
 idk_man.py
 state_machine.py
+test.py
+build
+dist
+main.spec
+icon.ico
+readme.md

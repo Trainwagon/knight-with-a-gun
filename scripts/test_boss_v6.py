@@ -61,7 +61,7 @@ class Boss(pygame.sprite.Sprite):
             'defensive': self.defensive_state,
             'charging': self.charging_state,
             'attacking': self.attacking_state,
-            'chasing': self.chasing_state,  # New chasing state
+            'chasing': self.chasing_state,
         }
         self.current_state = 'idle'
         self.state_timer = 0

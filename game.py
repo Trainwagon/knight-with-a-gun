@@ -23,7 +23,6 @@ class Game:
     def event_loop(self):
         for event in pygame.event.get():
             self.state.get_event(event)
-            # Remove the global ESC quit - we'll handle this in the state
             if event.type == pygame.QUIT:
                 self.done = True
                 pygame.quit()
@@ -65,10 +64,10 @@ class Game:
         self.state.draw(self.screen)
 
         # FPS Counter in top right corner
-        fps = self.clock.get_fps()
-        fps_text = self.font.render(f"FPS: {math.floor(fps)}", False, (255, 255, 255))
-        fps_rect = fps_text.get_rect(topright=(WIDTH - 10, 10))
-        self.screen.blit(fps_text, fps_rect)
+        # fps = self.clock.get_fps()
+        # fps_text = self.font.render(f"FPS: {math.floor(fps)}", False, (255, 255, 255))
+        # fps_rect = fps_text.get_rect(topright=(WIDTH - 10, 10))
+        # self.screen.blit(fps_text, fps_rect)
 
     def run(self):
         while not self.done:

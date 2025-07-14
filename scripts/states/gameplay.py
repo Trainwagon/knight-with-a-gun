@@ -43,6 +43,10 @@ class Gameplay(BaseState):
         
         self.persist = persistent
         
+        # Reset state variables
+        self.next_state = "GAME_OVER"
+        self.done = False
+
         # Initialize UI font
         self.ui_font = pygame.font.Font(self.font_path, 20)
         
