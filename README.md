@@ -25,4 +25,4 @@ A super simple bullet hell game where you're a knight with a gun... and you're f
 3. Run `main.exe`  
 4. Fight the boss and try not to die
 
-## Made By Me
+## Made By Trainwagon
